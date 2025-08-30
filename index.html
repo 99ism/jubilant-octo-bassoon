@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator Taping</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+    h1 { text-align: center; }
+    input, button { padding: 8px; margin: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f4f4f4; }
+    .total { font-weight: bold; background: #eef; }
+  </style>
+</head>
+<body>
+  <h1>Kalkulator Taping</h1>
+
+  <div>
+    <input type="text" id="ukuran" placeholder="Ukuran (misal 17 atau 17+17.5)">
+    <input type="text" id="bagian" placeholder="Bagian (misal depan)">
+    <button onclick="tambahData()">Tambah</button>
+  </div>
+
+  <table id="tabel">
+    <thead>
+      <tr>
+        <th>Bagian</th>
+        <th>Ukuran Asli</th>
+        <th>+3</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2" class="total">TOTAL</td>
+        <td id="total" class="total">0</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <script>
+    let total = 0;
+
+    function evalUkuran(str) {
+      try {
+        return Function('"use strict"; return (' + str + ')')();
+      } catch {
+        return NaN;
+      }
+    }
+
+    function tambahData() {
+      const ukuranInput = document.getElementById("ukuran").value.trim();
+      const bagian = document.getElementById("bagian").value.trim();
+
+      if (!ukuranInput || !bagian) {
+        alert("Isi ukuran dan bagian!");
+        return;
+      }
+
+      const ukuran = evalUkuran(ukuranInput);
+      if (isNaN(ukuran)) {
+        alert("Format ukuran salah!");
+        return;
+      }
+
+      const hasil = ukuran + 3;
+      total += hasil;
+
+      // Tambah ke tabel
+      const tbody = document.querySelector("#tabel tbody");
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${bagian}</td>
+        <td>${ukuran}</td>
+        <td>${hasil}</td>
+      `;
+      tbody.appendChild(row);
+
+      document.getElementById("total").innerText = total;
+
+      // Reset input
+      document.getElementById("ukuran").value = "";
+      document.getElementById("bagian").value = "";
+    }
+  </script>
+</body>
+</html>
