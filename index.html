@@ -5,85 +5,127 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kalkulator Taping</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
     h1 { text-align: center; }
-    input, button { padding: 8px; margin: 5px; }
+    select, input, button { padding: 6px; margin: 5px; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     th { background: #f4f4f4; }
     .total { font-weight: bold; background: #eef; }
+    input[type="number"], input[type="text"] { width: 100px; }
+    .hapus-btn { background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+    .add-btn { background: green; color: white; border: none; padding: 6px 12px; cursor: pointer; margin-top:10px; }
+    .save-btn { background: blue; color: white; border: none; padding: 6px 12px; cursor: pointer; margin-top:10px; }
   </style>
 </head>
 <body>
   <h1>Kalkulator Taping</h1>
 
-  <div>
-    <input type="text" id="ukuran" placeholder="Ukuran (misal 17 atau 17+17.5)">
-    <input type="text" id="bagian" placeholder="Bagian (misal depan)">
-    <button onclick="tambahData()">Tambah</button>
-  </div>
+  <label for="model">Pilih Model:</label>
+  <select id="model" onchange="loadModel()">
+    <option value="">-- pilih model --</option>
+    <option value="6panel">6 Panel Baseball/Polocap</option>
+    <option value="5panel">5 Panel Baseball/Polocap</option>
+    <option value="ampera">Topi Ampera</option>
+  </select>
+  <button class="add-btn" onclick="tambahBaris()">+ Tambah Baris</button>
+  <button class="save-btn" onclick="saveAsImage()">💾 Save ke Gambar</button>
 
-  <table id="tabel">
+  <table id="tabel" style="display:none">
     <thead>
       <tr>
         <th>Bagian</th>
-        <th>Ukuran Asli</th>
-        <th>+3</th>
+        <th>Ukuran</th>
+        <th>Allowance</th>
+        <th>Hasil</th>
+        <th>Aksi</th>
       </tr>
     </thead>
     <tbody></tbody>
     <tfoot>
       <tr>
-        <td colspan="2" class="total">TOTAL</td>
+        <td colspan="3" class="total">TOTAL</td>
         <td id="total" class="total">0</td>
+        <td></td>
       </tr>
     </tfoot>
   </table>
 
-  <script>
-    let total = 0;
+  <!-- html2canvas untuk save ke PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    function evalUkuran(str) {
-      try {
-        return Function('"use strict"; return (' + str + ')')();
-      } catch {
-        return NaN;
+  <script>
+    const templates = {
+      "6panel": ["Depan", "Belakang", "Samping Depan", "Samping Belakang", "Crown"],
+      "5panel": ["Belakang", "Samping Depan", "Samping Belakang", "Crown"],
+      "ampera": ["Atas", "Depan", "Samping"]
+    };
+
+    function loadModel() {
+      const model = document.getElementById("model").value;
+      const tbody = document.querySelector("#tabel tbody");
+      tbody.innerHTML = "";
+
+      if (!model) {
+        document.getElementById("tabel").style.display = "none";
+        return;
       }
+
+      templates[model].forEach(bagian => {
+        tambahRowKeTabel(bagian);
+      });
+
+      document.getElementById("tabel").style.display = "table";
+      hitungTotal();
     }
 
-    function tambahData() {
-      const ukuranInput = document.getElementById("ukuran").value.trim();
-      const bagian = document.getElementById("bagian").value.trim();
-
-      if (!ukuranInput || !bagian) {
-        alert("Isi ukuran dan bagian!");
-        return;
-      }
-
-      const ukuran = evalUkuran(ukuranInput);
-      if (isNaN(ukuran)) {
-        alert("Format ukuran salah!");
-        return;
-      }
-
-      const hasil = ukuran + 3;
-      total += hasil;
-
-      // Tambah ke tabel
+    function tambahRowKeTabel(bagian = "") {
       const tbody = document.querySelector("#tabel tbody");
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${bagian}</td>
-        <td>${ukuran}</td>
-        <td>${hasil}</td>
+        <td><input type="text" value="${bagian}" oninput="hitungTotal()"></td>
+        <td><input type="number" step="0.1" oninput="hitungTotal()"></td>
+        <td><input type="number" step="0.1" value="3" oninput="hitungTotal()"></td>
+        <td class="hasil">0</td>
+        <td><button class="hapus-btn" onclick="hapusBaris(this)">Hapus</button></td>
       `;
       tbody.appendChild(row);
+    }
+
+    function tambahBaris() {
+      document.getElementById("tabel").style.display = "table";
+      tambahRowKeTabel("");
+    }
+
+    function hapusBaris(button) {
+      const row = button.closest("tr");
+      row.remove();
+      hitungTotal();
+    }
+
+    function hitungTotal() {
+      const rows = document.querySelectorAll("#tabel tbody tr");
+      let total = 0;
+
+      rows.forEach(row => {
+        const ukuran = parseFloat(row.cells[1].querySelector("input").value) || 0;
+        const allowance = parseFloat(row.cells[2].querySelector("input").value) || 0;
+        const hasil = ukuran + allowance;
+        row.querySelector(".hasil").innerText = hasil;
+        total += hasil;
+      });
 
       document.getElementById("total").innerText = total;
+    }
 
-      // Reset input
-      document.getElementById("ukuran").value = "";
-      document.getElementById("bagian").value = "";
+    function saveAsImage() {
+      const tabel = document.getElementById("tabel");
+      html2canvas(tabel).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "taping.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
     }
   </script>
 </body>
