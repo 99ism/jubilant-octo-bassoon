@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kalkulator Taping</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; transition: background 0.3s, color 0.3s; }
     h1 { text-align: center; }
     select, input, button { padding: 6px; margin: 5px; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -16,10 +16,24 @@
     .hapus-btn { background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; }
     .add-btn { background: green; color: white; border: none; padding: 6px 12px; cursor: pointer; margin-top:10px; }
     .save-btn { background: blue; color: white; border: none; padding: 6px 12px; cursor: pointer; margin-top:10px; }
+    .theme-btn { background: #555; color: white; border: none; padding: 6px 12px; cursor: pointer; margin-top:10px; float: right; }
+
+    /* Dark Mode */
+    body.dark { background: #1e1e1e; color: #eee; }
+    body.dark table { border-color: #555; }
+    body.dark th { background: #333; }
+    body.dark td, body.dark th { border-color: #555; }
+    body.dark .total { background: #444; }
+    body.dark .add-btn { background: #2e7d32; }
+    body.dark .save-btn { background: #1565c0; }
+    body.dark .hapus-btn { background: #c62828; }
+    body.dark .theme-btn { background: #999; color: black; }
   </style>
 </head>
 <body>
   <h1>Kalkulator Taping</h1>
+
+  <button class="theme-btn" onclick="toggleTheme()">🌙/☀️</button>
 
   <label for="model">Pilih Model:</label>
   <select id="model" onchange="loadModel()">
@@ -126,6 +140,18 @@
         link.href = canvas.toDataURL("image/png");
         link.click();
       });
+    }
+
+    // Toggle Theme
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    // Load theme dari localStorage saat halaman dibuka
+    window.onload = () => {
+      const theme = localStorage.getItem("theme") || "light";
+      document.body.classList.add(theme);
     }
   </script>
 </body>
